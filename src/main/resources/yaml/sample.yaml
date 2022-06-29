@@ -1,0 +1,41 @@
+- route:
+    id: Flow2
+    auto-startup: true
+    from:
+      uri: direct://Flow1
+      steps:
+        - set-property:
+            name: x
+            simple: ${body[x]}
+        - set-property:
+            name: y
+            simple: ${body[y]}
+        - transform:
+            id: Flow1-Function1
+            joor: |-
+              // Exchange Properties로부터 변수 선언
+              Integer x = exchange.getProperty('x', Integer.class);
+              Integer y = exchange.getProperty('y', Integer.class);
+              Object _result = exchange.getMessage().getBody();
+              
+              _result = x + y;
+              
+              // Set Property을 실행하여 필드값 변경 적용
+              exchange.setProperty('x', x);
+              exchange.setProperty('y', y);
+              return _result;
+        - choice:
+            id: Flow1-Choice1
+            when:
+              - id: Flow2-Choice1-When1
+                simple: ${body} > 10
+                steps:
+                  - set-body:
+                      id: Flow1-Function2
+                      simple: 결과는 10보다 크다.
+            otherwise:
+              id: Flow1-Choice1-Otherwise
+              steps:
+                - set-body:
+                    id: Flow1-Function3
+                    simple: 결과는 10 이하
